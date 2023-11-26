@@ -97,15 +97,12 @@ def depthFirstSearch(problem):
     while not stack.isEmpty():
         # Pop the top element from the stack
         state, path = stack.pop()
-
         # An to state=goal , return the path
         if problem.isGoalState(state):
             return path
-
         # An einai unvisited, explore
         if state not in visited:
             visited.add(state)  # Mark as visited
-
             for successor, action, _ in problem.getSuccessors(state):
                 # an o successor den einai visited, push sto stack mazi me to path
                 if successor not in visited:
@@ -127,15 +124,12 @@ def breadthFirstSearch(problem):
     while not queue.isEmpty():
         # dequeue to prwto stoixeio
         state, path = queue.pop()
-
         # An to state=goal , return the path
         if problem.isGoalState(state):
             return path
-
         # An einai unvisited, explore
         if state not in visited:
             visited.add(state)  # Mark as visited
-
             for successor, action, _ in problem.getSuccessors(state):
                 if successor not in visited:
                     queue.push((successor, path + [action]))
@@ -158,6 +152,30 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    p_queue = util.PriorityQueue()
+    visited = {}
+
+    start = problem.getStartState()
+    p_queue.push((start, [], 0), 0)
+
+    while not p_queue.isEmpty():
+        state, path, currentCost = p_queue.pop()
+
+        if problem.isGoalState(state):
+            return path
+
+        if state not in visited or currentCost < visited[state]:
+            visited[state] = currentCost
+
+            for successor, action, stepCost in problem.getSuccessors(state):
+                newCost = currentCost + stepCost
+                priority = newCost
+                h_value = heuristic(successor, problem) 
+                if h_value is not None:
+                    priority += heuristic(successor, problem)
+                item = (successor, path + [action], newCost)
+                p_queue.push(item, priority)
+
 
     util.raiseNotDefined()
 

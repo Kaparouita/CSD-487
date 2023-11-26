@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+import sys
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -444,6 +445,34 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    
+    # calculate the distance to the farthest dot
+    # calculate the distance between the two dots
+    # return the sum of the two distances
+
+
+    if foodGrid.count() == 0:
+        return 0
+
+    maxDistance = float('-inf')
+
+    for food in foodGrid.asList():
+        distance = util.manhattanDistance(position, food)
+        if distance > maxDistance:
+            maxDistance = distance
+    
+    if foodGrid.count() <= 1:
+        if maxDistance < 0:
+            return 0
+        return maxDistance
+    dot1 = foodGrid[0]
+    dot2 = foodGrid[1]
+    dots_distance =  util.manhattanDistance(dot1, dot2)
+
+    if maxDistance < 0:
+        return dots_distance
+    return maxDistance + dots_distance
+    
  
 
 class ClosestDotSearchAgent(SearchAgent):
