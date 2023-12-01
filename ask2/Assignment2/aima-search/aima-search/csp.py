@@ -651,8 +651,7 @@ def queen_constraint(A, a, B, b):
 
 
 class NQueensCSP(CSP):
-    """
-    Make a CSP for the nQueens problem for search with min_conflicts.
+    """Make a CSP for the nQueens problem for search with min_conflicts.
     Suitable for large n, it uses only data structures of size O(n).
     Think of placing queens one per column, from left to right.
     That means position (x, y) represents (var, val) in the CSP.
@@ -668,8 +667,7 @@ class NQueensCSP(CSP):
     If you want, you can keep track of conflicted variables, then variable
     selection will also be O(1).
     >>> len(backtracking_search(NQueensCSP(8)))
-    8
-    """
+    8"""
 
     def __init__(self, n):
         """Initialize data structures for n Queens."""
