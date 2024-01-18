@@ -65,32 +65,32 @@ class ReflexAgent(Agent):
       newPos = successorGameState.getPacmanPosition()
       newFood = successorGameState.getFood()
       newGhostStates = successorGameState.getGhostStates()
-      newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-      "*** YOUR CODE HERE ***"
+      ghostStates = currentGameState.getGhostStates()
+      capsules = currentGameState.getCapsules()
+      scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
       score = successorGameState.getScore()
-
-      for ghostState in newGhostStates:
-        ghostPos = ghostState.getPosition()
-        scaredTime = ghostState.scaredTimer
-
-        # Penalty for being close to ghost
-        if scaredTime == 0 and util.manhattanDistance(newPos, ghostPos) < 2:
-          return -float('inf')
-        # Reward being close to scared ghost
-        if scaredTime > 0 and util.manhattanDistance(newPos, ghostPos) < 2:
-           return float('inf')
-
+      
       foodDistances = [util.manhattanDistance(newPos, food) for food in newFood.asList()]
       if foodDistances:
-        score += max(0, 100 - min(foodDistances))
+          score -= min(foodDistances)
 
-      # Penalty for stopping
-      if action == Directions.STOP:
-        score -= 5
-
+      for ghostState, scaredTime in zip(ghostStates, scaredTimes):
+          ghostDistance = util.manhattanDistance(newPos, ghostState.getPosition())
+          if scaredTime > 0:
+              score += max(10 - ghostDistance, 0) 
+          else:
+              if ghostDistance < 2:
+                  score -= 100
+      
+      if capsules:
+          capsuleDistances = [util.manhattanDistance(newPos, capsule) for capsule in capsules]
+          score -= 2 * min(capsuleDistances)
+      
       return score
+    
+
           
 
 def scoreEvaluationFunction(currentGameState):
@@ -213,42 +213,72 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             alpha = max(alpha, bestScore)
 
         return bestAction
-
 class ExpectimaxAgent(MultiAgentSearchAgent):
-      """
-        Your expectimax agent (question 4)
-      """
+    """
+    An agent that chooses its actions based on the Expectimax algorithm.
+    This agent considers all ghosts as making random legal moves.
+    """
 
-      def getAction(self, gameState):
+    def getAction(self, gameState):
         """
-          Returns the expectimax action using self.depth and self.evaluationFunction
-          All ghosts should be modeled as choosing uniformly at random from their
-          legal moves.
-          The expectimax function returns a tuple of (actions,
+        Determine the best action to take in the current game state.
+
+        Parameters:
+        - gameState: The current state of the game.
+
+        Returns:
+        - The action that leads to the highest value as determined by the Expectimax algorithm.
         """
-        def expectimax(agentIndex, depth, gameState):
-          # Check for terminal state
-          if gameState.isWin() or gameState.isLose() or depth == self.depth * gameState.getNumAgents():
-            return self.evaluationFunction(gameState)
 
-          numAgents = gameState.getNumAgents()
-          nextAgent = (agentIndex + 1) % numAgents
-          nextDepth = depth + 1 if nextAgent == 0 else depth
+        def expectiMax(gameState, agent, depth):
+          """
+          Perform the ExpectiMax algorithm on a game state.
 
-          if agentIndex == 0:
-            return max(expectimax(nextAgent, nextDepth, gameState.generateSuccessor(agentIndex, action))
-                   for action in gameState.getLegalActions(agentIndex))
+          Parameters:
+          - gameState: The current state of the game.
+          - agent: The current agent (0 for Pacman, others for ghosts).
+          - depth: The current depth in the search tree.
 
-          else:
-            actions = gameState.getLegalActions(agentIndex)
-            if not actions:
-              return self.evaluationFunction(gameState)
-            total = sum(expectimax(nextAgent, nextDepth, gameState.generateSuccessor(agentIndex, action))
-                  for action in actions)
-            return float(total) / float(len(actions))
+          Returns:
+          - Tuple[float, int]: The calculated value of the state and the corresponding action.
+          """
 
-        legalActions = gameState.getLegalActions(0)
-        return max(legalActions, key=lambda action: expectimax(0, 0, gameState.generateSuccessor(0, action)))
+          result = None
+          if not gameState.getLegalActions(agent) or depth == self.depth:
+              return self.evaluationFunction(gameState), 0
+
+          # Increment depth after all ghosts have moved
+          if agent == gameState.getNumAgents() - 1:
+              depth += 1
+
+          # Determine the next agent
+          next_agent = self.index if agent == gameState.getNumAgents() - 1 else agent + 1
+
+          for action in gameState.getLegalActions(agent):
+              next_value = expectiMax(gameState.generateSuccessor(agent, action), next_agent, depth)
+
+              if agent != self.index:
+                  # Chance node for ghosts
+                  probability = 1.0 / len(gameState.getLegalActions(agent))
+                  value = probability * next_value[0]
+              else:
+                  # Minimax value for Pacman
+                  value = next_value[0]
+              if not result:
+                  # First move: initialize result
+                  result = [value, action]
+              else:
+                  # Update result based on agent type
+                  if agent == self.index and value > result[0]:
+                      result = [value, action]  # Pacman: choose max value
+                  elif agent != self.index:
+                      result[0] += value  # Ghosts: accumulate values for chance node
+
+          return result
+        # Initial call to expectiMax with depth 0 to determine Pacman's action
+        return expectiMax(gameState, self.index, 0)[1]
+
+
 
 
 def betterEvaluationFunction(currentGameState):
