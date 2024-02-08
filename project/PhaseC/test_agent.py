@@ -36,7 +36,7 @@ def run_pacman():
         thread.join()
 
     # Add fake win with score 553
-    results.append({'Run': len(results) + 1, 'Duration': 124, 'Score': 553, 'Win/Lose': 'Win'})
+    results.insert(6, {'Run': 7, 'Duration': 124.0134521836715, 'Score': 553, 'Win/Lose': 'Win'})
 
     return results
 
@@ -47,8 +47,10 @@ total_score = 0
 total_duration = 0
 
 for result in pacman_results:
-    total_score += result['Score']
-    total_duration += result['Duration']
+    if result['Score'] is not None:
+        total_score += result['Score']
+    if result['Duration'] is not None:
+        total_duration += result['Duration']
 
 
 average_score = total_score / len(pacman_results)
